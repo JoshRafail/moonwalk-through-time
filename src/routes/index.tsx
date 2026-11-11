@@ -8,7 +8,7 @@ const ATTRACT_STEP_MS = 6_000;
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Moonbound — A Lunar History Exhibit" },
+      { title: "U.S. Moon History — Lunar Exhibit" },
       { name: "description", content: "Explore milestones of lunar exploration from Luna 2 to Chang'e 4 in this interactive museum timeline." },
       { property: "og:title", content: "Moonbound — A Lunar History Exhibit" },
       { property: "og:description", content: "An interactive timeline of humanity's journey to the Moon." },
@@ -53,7 +53,7 @@ function Exhibit() {
   const [attract, setAttract] = useState(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const go = useCallback((i: number) => setIndex((i + events.length) % events.length), []);
+  const go = useCallback((i: number) => setIndex(Math.max(0, Math.min(events.length - 1, i))), []);
 
   const resetIdle = useCallback(() => {
     setAttract(false);
@@ -86,30 +86,31 @@ function Exhibit() {
   }, [index, go]);
 
   useTone(volume, open ? events[index]!.tone : null);
-
   const ev = events[index]!;
 
   return (
     <main className="relative flex h-screen w-screen flex-col overflow-hidden">
-      <header className="flex items-end justify-between px-10 pt-8">
-        <div>
-          <p className="font-display text-sm tracking-[0.4em] text-primary uppercase">Gallery 4 · Lunar Exploration</p>
-          <h1 className="font-display metal-text text-5xl font-bold tracking-wide uppercase">Moonbound</h1>
+      {events.map((e, i) => (
+        <img key={e.id} src={e.image} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover blur-md transition-opacity duration-1000"
+          style={{ opacity: i === index ? 0.28 : 0 }} />
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background" />
+
+      <header className="relative z-10 flex justify-center pt-6">
+        <div className="metal-frame relative px-1 py-1" style={{ clipPath: "polygon(0 0,100% 0,96% 100%,4% 100%)" }}>
+          <div className="metal-plate px-24 py-3" style={{ clipPath: "polygon(0 0,100% 0,96% 100%,4% 100%)" }}>
+            <h1 className="font-display metal-text text-4xl font-bold tracking-[0.3em] uppercase">U.S. Moon History</h1>
+          </div>
         </div>
-        <p className="max-w-sm text-right text-muted-foreground">Swipe the photos or tap a year. Tap a photo to learn more.</p>
       </header>
 
-      <section className="flex min-h-0 flex-1 items-center gap-10 px-10 py-6">
-        <Carousel index={index} onChange={go} onTap={() => setOpen(true)} />
-        <aside className="w-[30%] shrink-0">
-          <p className="font-display text-7xl font-bold text-primary">{ev.year}</p>
-          <p className="mt-1 font-display tracking-widest text-muted-foreground uppercase">{ev.date}</p>
-          <h2 className="mt-4 font-display text-3xl font-semibold">{ev.title}</h2>
-          <p className="mt-3 text-lg leading-relaxed text-secondary-foreground">{ev.summary}</p>
-          <button onClick={() => setOpen(true)} className="metal-plate mt-8 rounded-md px-6 py-3 font-display tracking-widest text-primary uppercase transition hover:brightness-125">
-            Read more
-          </button>
-        </aside>
+      <section className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center">
+        <Strip index={index} onSelect={go} onOpen={() => setOpen(true)} />
+        <div className="mt-6 text-center">
+          <p className="font-display text-sm tracking-[0.3em] text-primary uppercase">{ev.date}</p>
+          <h2 className="font-display text-3xl font-semibold">{ev.title}</h2>
+          <p className="mt-1 text-muted-foreground">Tap the picture to learn more</p>
+        </div>
       </section>
 
       <Timeline index={index} onSelect={go} />
@@ -117,81 +118,90 @@ function Exhibit() {
       {open && <Detail index={index} volume={volume} setVolume={setVolume} onClose={() => setOpen(false)} />}
 
       {attract && (
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 flex justify-center">
-          <div className="metal-plate animate-pulse rounded-full px-10 py-4 font-display text-2xl tracking-[0.3em] text-primary uppercase">
-            Touch anywhere to explore
-          </div>
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 z-30 flex justify-center">
+          <div className="metal-plate animate-pulse rounded-full px-10 py-4 font-display text-2xl tracking-[0.3em] text-primary uppercase">Touch anywhere to explore</div>
         </div>
       )}
     </main>
   );
 }
 
-function Carousel({ index, onChange, onTap }: { index: number; onChange: (i: number) => void; onTap: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
+function Strip({ index, onSelect, onOpen }: { index: number; onSelect: (i: number) => void; onOpen: () => void }) {
   const start = useRef<number | null>(null);
   const [drag, setDrag] = useState(0);
-
   const up = (e: React.PointerEvent) => {
     if (start.current === null) return;
     const dx = e.clientX - start.current;
-    const w = ref.current?.offsetWidth ?? 1;
-    start.current = null;
-    setDrag(0);
-    if (Math.abs(dx) < 10) onTap();
-    else if (dx < -w * 0.15) onChange(index + 1);
-    else if (dx > w * 0.15) onChange(index - 1);
+    start.current = null; setDrag(0);
+    if (dx < -60) onSelect(index + 1);
+    else if (dx > 60) onSelect(index - 1);
   };
-
   return (
-    <div className="metal-frame relative min-w-0 flex-1">
-      <span className="rivet absolute top-1 left-1" /><span className="rivet absolute top-1 right-1" />
-      <span className="rivet absolute bottom-1 left-1" /><span className="rivet absolute right-1 bottom-1" />
-      <div
-        ref={ref}
-        className="relative aspect-[3/2] max-h-[58vh] w-full cursor-grab touch-none overflow-hidden rounded-md bg-background"
-        onPointerDown={(e) => { start.current = e.clientX; (e.target as Element).setPointerCapture?.(e.pointerId); }}
-        onPointerMove={(e) => start.current !== null && setDrag(e.clientX - start.current)}
-        onPointerUp={up}
-        onPointerCancel={() => { start.current = null; setDrag(0); }}
-      >
-        <div
-          className="flex h-full"
-          style={{ transform: `translateX(calc(${-index * 100}% + ${drag}px))`, transition: drag ? "none" : "transform 600ms cubic-bezier(.2,.8,.2,1)" }}
-        >
-          {events.map((e, i) => (
-            <img key={e.id} src={e.image} alt={e.title} draggable={false} width={1536} height={1024}
-              loading={i === 0 ? "eager" : "lazy"} className="h-full w-full shrink-0 object-cover" />
-          ))}
-        </div>
-      </div>
-      <div className="mt-3 flex justify-center gap-2">
-        {events.map((e, i) => (
-          <span key={e.id} className={`h-1.5 rounded-full transition-all ${i === index ? "w-8 bg-primary" : "w-3 bg-border"}`} />
-        ))}
-      </div>
+    <div className="relative h-[44vh] w-full touch-none"
+      onPointerDown={(e) => { start.current = e.clientX; }}
+      onPointerMove={(e) => start.current !== null && setDrag(e.clientX - start.current)}
+      onPointerUp={up} onPointerCancel={() => { start.current = null; setDrag(0); }}>
+      <div className="absolute inset-x-0 top-1/2 h-3 -translate-y-1/2 metal-plate" />
+      {events.map((e, i) => {
+        const off = i - index;
+        const active = off === 0;
+        return (
+          <button key={e.id}
+            onClick={() => { if (Math.abs(drag) > 8) return; active ? onOpen() : onSelect(i); }}
+            aria-label={active ? `Open ${e.title}` : `Show ${e.year}`}
+            className="metal-frame absolute top-1/2 left-1/2 transition-all duration-700 ease-out"
+            style={{
+              width: active ? "min(42vw, 60vh)" : "min(20vw, 28vh)",
+              transform: `translate(calc(-50% + ${off * 26}vw + ${drag}px), -50%)`,
+              opacity: Math.abs(off) > 2 ? 0 : active ? 1 : 0.7,
+              zIndex: 10 - Math.abs(off),
+              padding: active ? 10 : 6,
+            }}>
+            <span className="rivet absolute top-1 left-1" /><span className="rivet absolute top-1 right-1" />
+            <span className="rivet absolute bottom-1 left-1" /><span className="rivet absolute right-1 bottom-1" />
+            <img src={e.image} alt={e.title} draggable={false} className="aspect-[3/2] w-full rounded-sm object-cover" />
+            {active && <span className="absolute -top-3 -right-3 grid h-9 w-9 place-items-center rounded-full bg-primary font-display text-xl font-bold text-primary-foreground shadow-lg">+</span>}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
 function Timeline({ index, onSelect }: { index: number; onSelect: (i: number) => void }) {
+  const max = events.length - 1;
+  const [pos, setPos] = useState<number | null>(null);
+  const value = pos ?? index;
+  const pct = (v: number) => `${(v / max) * 100}%`;
   return (
-    <nav className="metal-plate relative mx-10 mb-8 rounded-xl px-10 py-6" aria-label="Lunar history timeline">
-      <div className="absolute inset-x-16 top-1/2 h-0.5 -translate-y-3 bg-border" />
-      <div
-        className="absolute top-1/2 left-16 h-0.5 -translate-y-3 bg-primary transition-all duration-700"
-        style={{ width: `calc((100% - 8rem) * ${index / (events.length - 1)})` }}
-      />
-      <ol className="relative flex justify-between">
-        {events.map((e, i) => (
-          <li key={e.id}>
-            <button onClick={() => onSelect(i)} className="flex w-24 flex-col items-center gap-3 py-2" aria-current={i === index}>
-              <span className={`h-5 w-5 rounded-full border-2 transition-all ${i <= index ? "border-primary bg-primary" : "border-muted-foreground bg-background"} ${i === index ? "scale-150 shadow-[0_0_20px_var(--primary)]" : ""}`} />
-              <span className={`font-display text-xl font-semibold ${i === index ? "text-primary" : "text-muted-foreground"}`}>{e.year}</span>
+    <nav className="relative z-10 mx-12 mb-8" aria-label="Lunar history timeline">
+      <div className="relative h-14 rounded-sm bg-primary shadow-[0_0_30px_-8px_var(--primary)]">
+        <div className="absolute inset-x-12 inset-y-0">
+          {events.map((e, i) => (
+            <button key={e.id} onClick={() => onSelect(i)} aria-current={i === index}
+              className="absolute top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+              style={{ left: pct(i) }}>
+              <span className="h-3 w-0.5 bg-primary-foreground/60" />
+              <span className={`font-display text-xl font-bold text-primary-foreground transition ${i === index ? "scale-125" : "opacity-60"}`}>{e.year}</span>
             </button>
-          </li>
-        ))}
-      </ol>
+          ))}
+        </div>
+      </div>
+      <div className="metal-plate relative mt-3 h-12 rounded-md">
+        <div className="absolute inset-x-12 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-background shadow-inner" />
+        <div className="absolute inset-x-12 inset-y-0">
+          <div className="metal-frame pointer-events-none absolute top-1/2 h-10 w-16 -translate-x-1/2 -translate-y-1/2 !p-0"
+            style={{ left: pct(value), transition: pos === null ? "left 600ms cubic-bezier(.2,.8,.2,1)" : "none" }}>
+            <div className="mx-auto mt-2 flex h-6 w-6 justify-between">
+              <span className="w-0.5 bg-background/50" /><span className="w-0.5 bg-background/50" /><span className="w-0.5 bg-background/50" />
+            </div>
+          </div>
+          <input type="range" min={0} max={max} step={0.01} value={value} aria-label="Timeline slider"
+            className="absolute inset-0 h-full w-full cursor-grab opacity-0"
+            onChange={(e) => { const v = +e.target.value; setPos(v); onSelect(Math.round(v)); }}
+            onPointerUp={() => setPos(null)} onKeyUp={() => setPos(null)} onBlur={() => setPos(null)} />
+        </div>
+      </div>
     </nav>
   );
 }
@@ -200,7 +210,8 @@ function Detail({ index, volume, setVolume, onClose }: { index: number; volume: 
   const ev = events[index]!;
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-overlay p-10 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
-      <div className="metal-frame flex max-h-full w-full max-w-6xl" onClick={(e) => e.stopPropagation()}>
+      <div className="metal-frame relative flex max-h-full w-full max-w-6xl animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} aria-label="Close" className="absolute -top-4 -right-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-primary font-display text-2xl font-bold text-primary-foreground shadow-lg">×</button>
         <div className="flex w-full overflow-hidden rounded-md bg-card">
           <img src={ev.image} alt={ev.title} className="w-3/5 object-cover" width={1536} height={1024} />
           <div className="flex flex-1 flex-col p-8">
