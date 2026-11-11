@@ -51,7 +51,7 @@ function Exhibit() {
   const [open, setOpen] = useState(false);
   const [volume, setVolume] = useState(50);
   const [attract, setAttract] = useState(false);
-  const idleTimer = useRef<ReturnType<typeof setTimeout>>();
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const go = useCallback((i: number) => setIndex((i + events.length) % events.length), []);
 
@@ -85,9 +85,9 @@ function Exhibit() {
     return () => window.removeEventListener("keydown", k);
   }, [index, go]);
 
-  useTone(volume, open ? events[index].tone : null);
+  useTone(volume, open ? events[index]!.tone : null);
 
-  const ev = events[index];
+  const ev = events[index]!;
 
   return (
     <main className="relative flex h-screen w-screen flex-col overflow-hidden">
@@ -197,7 +197,7 @@ function Timeline({ index, onSelect }: { index: number; onSelect: (i: number) =>
 }
 
 function Detail({ index, volume, setVolume, onClose }: { index: number; volume: number; setVolume: (v: number) => void; onClose: () => void }) {
-  const ev = events[index];
+  const ev = events[index]!;
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-overlay p-10 backdrop-blur-sm animate-in fade-in" onClick={onClose}>
       <div className="metal-frame flex max-h-full w-full max-w-6xl" onClick={(e) => e.stopPropagation()}>
