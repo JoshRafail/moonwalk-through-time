@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { events } from "@/data/events";
+import { ChevronDown, ChevronUp, Info } from "lucide-react";
 
 const IDLE_MS = 45_000;
 const ATTRACT_STEP_MS = 6_000;
@@ -160,7 +161,11 @@ function Strip({ index, onSelect, onOpen }: { index: number; onSelect: (i: numbe
             <span className="rivet absolute top-1 left-1" /><span className="rivet absolute top-1 right-1" />
             <span className="rivet absolute bottom-1 left-1" /><span className="rivet absolute right-1 bottom-1" />
             <img src={e.image} alt={e.title} draggable={false} className="aspect-[3/2] w-full rounded-sm object-cover" />
-            {active && <span className="absolute -top-3 -right-3 grid h-9 w-9 place-items-center rounded-full bg-primary font-display text-xl font-bold text-primary-foreground shadow-lg">+</span>}
+            {active && (
+              <span aria-hidden className="absolute -top-3 -right-3 grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg">
+                <Info size={18} strokeWidth={2.5} />
+              </span>
+            )}
           </button>
         );
       })}
@@ -219,11 +224,20 @@ function Detail({ index, volume, setVolume, onClose }: { index: number; volume: 
             <h2 className="mt-2 font-display text-3xl font-bold">{ev.title}</h2>
             <p className="mt-4 text-lg leading-relaxed text-secondary-foreground">{ev.description}</p>
             <div className="mt-auto pt-6">
-              <label className="flex items-center gap-4 font-display text-sm tracking-widest text-muted-foreground uppercase">
-                Volume
-                <input type="range" min={0} max={100} value={volume} onChange={(e) => setVolume(+e.target.value)} className="h-2 flex-1 accent-primary" aria-label="Volume" />
-                <span className="w-10 text-right text-foreground">{volume}</span>
-              </label>
+              <div className="flex items-center gap-4 font-display text-sm tracking-widest text-muted-foreground uppercase">
+                <span>Volume</span>
+                <div className="metal-plate flex items-center gap-1 rounded-md p-1">
+                  <button onClick={() => setVolume(Math.max(0, volume - 10))} aria-label="Volume down" disabled={volume === 0}
+                    className="grid h-9 w-9 place-items-center rounded-sm text-primary transition hover:bg-secondary disabled:opacity-30">
+                    <ChevronDown size={20} strokeWidth={2.5} />
+                  </button>
+                  <span className="w-12 text-center font-display text-lg text-foreground tabular-nums">{volume}</span>
+                  <button onClick={() => setVolume(Math.min(100, volume + 10))} aria-label="Volume up" disabled={volume === 100}
+                    className="grid h-9 w-9 place-items-center rounded-sm text-primary transition hover:bg-secondary disabled:opacity-30">
+                    <ChevronUp size={20} strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
               <button onClick={onClose} className="metal-plate mt-6 w-full rounded-md py-3 font-display tracking-widest text-primary uppercase">Close</button>
             </div>
           </div>
