@@ -152,15 +152,17 @@ function Strip({ index, onSelect, onOpen }: { index: number; onSelect: (i: numbe
             aria-label={active ? `Open ${e.title}` : `Show ${e.year}`}
             className="metal-frame absolute top-1/2 left-1/2 transition-all duration-700 ease-out"
             style={{
-              width: active ? "min(42vw, 60vh)" : "min(20vw, 28vh)",
-              transform: `translate(calc(-50% + ${off * 26}vw + ${drag}px), -50%)`,
-              opacity: Math.abs(off) > 2 ? 0 : active ? 1 : 0.7,
+              width: active ? "min(42vw, 60vh)" : "min(25vw, 34vh)",
+              transform: `translate(calc(-50% + ${off * 30}vw + ${drag}px), -50%)`,
+              opacity: Math.abs(off) > 1 ? 0 : active ? 1 : 0.8,
+              pointerEvents: Math.abs(off) > 1 ? "none" : "auto",
               zIndex: 10 - Math.abs(off),
               padding: active ? 10 : 6,
             }}>
             <span className="rivet absolute top-1 left-1" /><span className="rivet absolute top-1 right-1" />
             <span className="rivet absolute bottom-1 left-1" /><span className="rivet absolute right-1 bottom-1" />
-            <img src={e.image} alt={e.title} draggable={false} className="aspect-[3/2] w-full rounded-sm object-cover" />
+            <img src={e.image} alt={e.title} draggable={false}
+              className={`aspect-[3/2] w-full rounded-sm object-cover transition-[filter] duration-700 ${active ? "" : "blur-[4px]"}`} />
             {active && (
               <span aria-hidden className="absolute -top-3 -right-3 grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg">
                 <Info size={18} strokeWidth={2.5} />
