@@ -129,6 +129,7 @@ function Exhibit() {
 
 function Strip({ index, onSelect, onOpen }: { index: number; onSelect: (i: number) => void; onOpen: () => void }) {
   const start = useRef<number | null>(null);
+  const dragged = useRef(false);
   const [drag, setDrag] = useState(0);
   const up = (e: React.PointerEvent) => {
     if (start.current === null) return;
@@ -139,16 +140,21 @@ function Strip({ index, onSelect, onOpen }: { index: number; onSelect: (i: numbe
   };
   return (
     <div className="relative h-[44vh] w-full touch-none"
-      onPointerDown={(e) => { start.current = e.clientX; }}
-      onPointerMove={(e) => start.current !== null && setDrag(e.clientX - start.current)}
-      onPointerUp={up} onPointerCancel={() => { start.current = null; setDrag(0); }}>
+      onPointerDown={(e) => { start.current = e.clientX; dragged.current = false; }}
+      onPointerMove={(e) => {
+        if (start.current === null) return;
+        const d = e.clientX - start.current;
+        if (Math.abs(d) > 8) dragged.current = true;
+        setDrag(d);
+      }}
+      onPointerUp={up} onPointerCancel={() => { start.current = null; dragged.current = false; setDrag(0); }}>
       <div className="absolute inset-x-0 top-1/2 h-3 -translate-y-1/2 metal-plate" />
       {events.map((e, i) => {
         const off = i - index;
         const active = off === 0;
         return (
           <button key={e.id}
-            onClick={() => { if (Math.abs(drag) > 8) return; active ? onOpen() : onSelect(i); }}
+            onClick={() => { if (dragged.current) return; active ? onOpen() : onSelect(i); }}
             aria-label={active ? `Open ${e.title}` : `Show ${e.year}`}
             className="metal-frame absolute top-1/2 left-1/2 transition-all duration-700 ease-out"
             style={{
