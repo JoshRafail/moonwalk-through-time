@@ -100,7 +100,7 @@ function Exhibit() {
       <header className="relative z-10 flex justify-center pt-6">
         <div className="metal-frame relative px-1 py-1" style={{ clipPath: "polygon(0 0,100% 0,96% 100%,4% 100%)" }}>
           <div className="metal-plate px-24 py-3" style={{ clipPath: "polygon(0 0,100% 0,96% 100%,4% 100%)" }}>
-            <h1 className="font-display metal-text text-4xl font-bold tracking-[0.3em] uppercase">U.S. Moon History</h1>
+            <h1 className="font-display metal-text text-4xl font-bold tracking-[0.3em] uppercase">MOON HISTORY</h1>
           </div>
         </div>
       </header>
